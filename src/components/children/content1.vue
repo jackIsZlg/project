@@ -1,0 +1,184 @@
+<template>
+  <div class="article">
+    <div class="title-main">
+      <h2 class="title">vue+express+pm2+nginx前后端搭建</h2>
+      <div class="time">2018-09-17 10:12:56</div>
+    </div>
+    <div class="content">
+      <h3>一、LINUX上安装node环境：</h3>
+      <p>
+        1、wget命令下载Node.js安装包。
+        该安装包是编译好的文件，解压之后，在bin文件夹中就已存在node和npm，无需重复编译。
+        wget https://nodejs.org/dist/v6.9.5/node-v6.9.5-linux-x64.tar.xz
+      </p>
+      <p>
+        2、解压文件。
+        tar xvf node-v6.9.5-linux-x64.tar.xz</p>
+      <p>
+        3、创建软链接，使node和npm命令全局有效。
+        通过创建软链接的方法，使得在任意目录下都可以直接使用node和npm命令：
+        ln -s /root/node-v6.9.5-linux-x64/bin/node /usr/local/bin/node
+        ln -s /root/node-v6.9.5-linux-x64/bin/npm /usr/local/bin/npm
+      </p>
+      <p>
+        4，查看node、npm版本。
+        node -v
+        npm -v
+        5、至此，Node.js环境已安装完毕。
+        软件默认安装在/root/node-v6.9.5-linux-x64/目录下。如果需要将该软件安装到其他目录（如：/opt/node/）下，请进行如下操作：
+        mkdir -p /opt/node/
+        mv /root/node-v6.9.5-linux-x64/* /opt/node/
+        rm -f /usr/local/bin/node
+        rm -f /usr/local/bin/npm
+        ln -s /opt/node/bin/node /usr/local/bin/node
+        ln -s /opt/node/bin/npm /usr/local/bin/npm
+
+        注：参考链接 https://www.cnblogs.com/MY0101/p/6625344.html
+      </p>
+
+      <h3>二、安装nginx步骤：</h3>
+      <p>
+        1、linux环境主要是为：Centos7 和 ubuntu环境
+        打开编辑器：ssh root@域名 登陆，
+        一般外部文件放到/usr/local/src下，也可以自己下载解压
+        tar -zxvf nginx-1.15.4.tar.gz -C /usr/local/src
+      </p>
+      <p>
+        2、解压后进入： cd /usr/local/src/nginx-1.15.4
+        检查安装环境,并指定将来要安装的路径：
+        ./configure --prefix=/usr/local/nginx
+      </p>
+      <p>3、Centos7下使用yum安装缺少的包，先安装yum，主要是缺少pcre-devel／openssl／openssl-devel需要安装
+        yum -y install gcc pcre-devel openssl openssl-devel
+        执行：
+        make && make install
+        如果执行成功，会在usr/local/src 下面看到nginx目录，说明安装成功
+        到nginx/sbin目录下面 执行 ./nginx 启动nginx 如果弹出欢迎使用的页面，说明成功启动
+
+        参考链接：https://blog.csdn.net/maoyuanming0806/article/details/80152876
+      </p>
+
+      <p>
+        4、ubuntu环境下面 没有yum:
+        解决依赖包openssl安装，命令：
+        sudo apt-get install openssl libssl-dev
+        解决依赖包pcre安装，命令：
+        sudo apt-get install libpcre3 libpcre3-dev
+        在Ubuntu下安装GCC和其他一些Linux系统有点不一样：
+        sudo apt-get  install  build-essential
+
+        参考链接：
+        https://blog.csdn.net/z920954494/article/details/52132125
+        安装Gcc: https://blog.csdn.net/anneqiqi/article/details/51725658
+
+        nginx配置：(正式前后端代理分开，接口代理：location ~ ^/api，vue项目地址配置: location / )
+        server {
+        listen       200; #监听200端口，必须加上端口号才能访问地址
+        server_name  fengyenan.com;
+
+        location /json {
+        # 添加头信息
+        add_header  Content-Type 'text/json; charset=utf-8';
+        return 200 '{"code": 1001}';
+        }
+
+        location ~ ^/api {
+        proxy_pass    http://127.0.0.1:3000;
+        }
+
+        location / {
+        root /home/;
+        index  index.html;
+        }
+        }
+      </p>
+
+      <h3>三、安装PM2及其使用</h3>
+      <p>
+        1、全局安装：npm install -g pm2
+      </p>
+      <p>
+        2、如果全局PM2命令找不到：
+        建立到软链接 ln -s /usr/node/node-v6.11.0-linux-x64/bin/pm2 /usr/local/bin/
+      </p>
+      <p>
+        3、启动PM2
+        在node项目指定目录下面
+        第一次启动：pm2 start app.js --watch -i 2
+        重启：pm2 restart app.js
+        查看进程状态：pm2 list
+
+        参考链接：
+        http://www.cnblogs.com/chyingp/p/pm2-documentation.html
+        http://www.cnblogs.com/xiashan17/p/5896427.html
+      </p>
+
+      <h3>四、搭建node-express框架</h3>
+      <p>
+        1、使用express-generator快速构建项目
+        npm install express-generator -g
+      </p>
+      <p>
+        2、在任意目录下面使用：
+        express myExpress
+        npm install依赖包
+      </p>
+      <p>
+        3、以html作为引擎，接下来就对目录做一个调整：
+        将bin目录下www拷出上级目录，改名为main.js等等，参考链接：https://blog.csdn.net/jingbo18/article/details/78576547
+      </p>
+      <p>
+        4、调试时，配置请求不跨越，在app.js里面 var app = express();下配置:<br/>
+        var app = express();<br/>
+        app.use(function(req, res, next){<br/>
+        res.header("Access-Control-Allow-Origin", "*");<br/>
+        res.header("Access-Control-Allow-Headers", "X-Requested-With");<br/>
+        res.header("Access-Control-Allow-Methods","PUT,POST,GET,DELETE,OPTIONS");<br/>
+        res.header("X-Powered-By",' 3.2.1');<br/>
+        res.header("Content-Type", "application/json;charset=utf-8");<br/>
+        next();<br/>
+        });<br/>
+      </p>
+      <p>5、项目部署在如nginx配置的话，放在任何目录下面，使用pm2启动</p>
+    </div>
+  </div>
+</template>
+
+<script>
+  export default {
+    name: 'HelloWorld',
+    data () {
+      return {
+        msg: 'Welcome to Your Vue.js App'
+      }
+    },
+    methods:{
+
+    }
+  }
+</script>
+
+<!-- Add "scoped" attribute to limit CSS to this component only -->
+<style scoped lang="less">
+  .article{
+    font-size: 16px;
+    text-align: left;
+    padding: 0px 20px;
+    box-sizing: border-box;
+    .title-main{
+      .time{
+        font-size: 12px;
+        color: #858585;
+      }
+    }
+    .content{
+      border-top: 1px solid #CCC;
+      word-wrap:break-word ;
+      p{
+        font-size: 16px;
+      }
+    }
+  }
+
+
+</style>
