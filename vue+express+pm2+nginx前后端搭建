@@ -38,6 +38,7 @@
       到nginx/sbin目录下面 执行 ./nginx 启动nginx 如果弹出欢迎使用的页面，说明成功启动
       
       参考链接：https://blog.csdn.net/maoyuanming0806/article/details/80152876
+              https://www.jianshu.com/p/9f2c162ac77c
       
     4、ubuntu环境下面 没有yum:
        解决依赖包openssl安装，命令：
