@@ -72,6 +72,10 @@
                      index  index.html;
                  }
         }
+ 
+ 5、安装git
+   参考文章 https://www.cnblogs.com/youqc/p/10488181.html
+
          
  三、安装PM2及其使用
     1、全局安装：npm install -g pm2
